@@ -5,6 +5,7 @@ import models
 from utils import create_unique_join_code
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 app = FastAPI()
 
@@ -13,6 +14,7 @@ models.Base.metadata.create_all(bind=engine)
 # Makes the join code in an interpretable json format for fastapi and sqlalchemy
 class JoinRequest(BaseModel):
     join_code: str
+
 
 # Starts a db session for an sql request
 def get_db() :
@@ -40,6 +42,8 @@ async def join_room(payload: JoinRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Room not found")
     return {"room_id": room.id}
 
-# @app.post("/rooms/")
-# async def post_turn():
-#     return
+@app.get("/rooms")
+async def get_rooms(db : Session = Depends(get_db), response_model=List[models.RoomOut]):
+    statement = select(models.Room)
+    result = db.execute(statement)
+    return result.scalars().all()

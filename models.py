@@ -1,6 +1,8 @@
 import uuid
+import datetime
 from sqlalchemy import Column, DateTime, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.sql import func
 from database import Base
 
@@ -17,3 +19,10 @@ class Turn(Base):
     room_id = Column(UUID(as_uuid=True), ForeignKey("rooms.id"))
     prompt = Column(String)
 
+#mirrors sqlalchemy class using pydantic to make it json
+class RoomOut(BaseModel):
+    id: uuid.UUID
+    join_code: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
