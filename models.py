@@ -24,5 +24,4 @@ class RoomOut(BaseModel):
     id: uuid.UUID
     join_code: str
     created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
