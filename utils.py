@@ -13,3 +13,4 @@ def create_unique_join_code(db: Session):
         exists = db.query(Room).filter(Room.join_code == code).first()
         if not exists:
             return code
+        

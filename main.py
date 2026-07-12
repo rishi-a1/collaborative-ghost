@@ -12,10 +12,19 @@ app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
-# Makes the join code in an interpretable json format for fastapi and sqlalchemy
+# Makes the following requests in an interpretable format for sqlalchemy and fastapi
 class JoinRequest(BaseModel):
     join_code: str
 
+class TurnRequest(BaseModel):
+    turn_prompt: str
+    author_name: str
+    room_id : uuid.UUID
+
+# function to generate the AI response using the prompt
+def get_ai_response(prompt):
+    a = "ai resp"
+    return str(a)
 
 # Starts a db session for an sql request
 def get_db() :
@@ -52,13 +61,22 @@ async def get_rooms(db : Session = Depends(get_db), response_model=List[models.R
     result = db.execute(statement)
     return result.scalars().all()
 
-@app.get("/room/{room_id}")
+#getting the room from the room id (uuid format) in the url
+@app.get("/rooms/{room_id}")
 async def get_room(room_id: uuid.UUID, db: Session = Depends(get_db)):
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    return {
-        "room_id": room.id,
-        "join_code": room.join_code,
-        "created_at": room.created_at,
-    }
+    return {"room_id": room.id, "join_code": room.join_code, "created_at": room.created_at}
+
+@app.post("/rooms/{room_id}")
+async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(get_db)):
+    room = db.query(models.Room).filter(models.Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    else:
+        turn_db = TurnRequest(turn_prompt=get_ai_response(turn.turn_prompt), author_name=turn.author_name, room_id = room_id)
+        db.add(turn_db)
+        db.commit()
+        db.refresh(turn_db)
+        return {"id": turn_db.id, "created_at": turn_db.created_at, "room_id": turn_db.room_id, "prompt": turn_db.turn_prompt, "author_name": turn_db.author_name}

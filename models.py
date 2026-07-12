@@ -18,6 +18,7 @@ class Turn(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     room_id = Column(UUID(as_uuid=True), ForeignKey("rooms.id"))
     prompt = Column(String)
+    author_name = Column(String)
 
 #mirrors sqlalchemy class using pydantic to make it json
 class RoomOut(BaseModel):
