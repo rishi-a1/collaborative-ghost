@@ -69,6 +69,7 @@ async def get_room(room_id: uuid.UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Room not found")
     return {"room_id": room.id, "join_code": room.join_code, "created_at": room.created_at}
 
+# function to add a turn once in a room
 @app.post("/rooms/{room_id}")
 async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(get_db)):
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
@@ -80,3 +81,14 @@ async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(
         db.commit()
         db.refresh(turn_db)
         return {"id": turn_db.id, "created_at": turn_db.created_at, "room_id": turn_db.room_id, "prompt": turn_db.turn_prompt, "author_name": turn_db.author_name}
+
+# function to get all turns in the room
+@app.get("/rooms/{room_id}")
+async def get_turns(room_id: uuid.UUID, db: Session = Depends(get_db), response_model=List[models.RoomOut]):
+    room = db.query(models.Room).filter(models.Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    else:
+        turn = db.query(models.Turn).filter(models.Turn.room_id == room_id)
+        result = db.execute(turn)
+        return result.scalars().all()
