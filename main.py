@@ -16,6 +16,9 @@ models.Base.metadata.create_all(bind=engine)
 class JoinRequest(BaseModel):
     join_code: str
 
+class MaxPlayers(BaseModel):
+    MaxPlayers: int
+
 class TurnRequest(BaseModel):
     turn_prompt: str
     author_name: str
@@ -36,9 +39,9 @@ def get_db() :
 
 # Function used to create a room and add it to the db
 @app.post("/create")
-async def create_room(db: Session = Depends(get_db)):
+async def create_room(payload: MaxPlayers, db: Session = Depends(get_db)):
     code = create_unique_join_code(db)
-    room = models.Room(join_code=code)
+    room = models.Room(join_code=code, max_players=payload.MaxPlayers)
     db.add(room)
     db.commit()
     db.refresh(room)
