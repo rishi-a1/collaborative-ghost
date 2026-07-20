@@ -1,6 +1,6 @@
 import uuid
 import datetime
-from sqlalchemy import Column, DateTime, String, ForeignKey, Integer
+from sqlalchemy import Column, DateTime, String, ForeignKey, Integer, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.sql import func
@@ -11,6 +11,9 @@ class Room(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     join_code = Column(String, unique=True, index = True)
+    players = Column(JSON, default=list)
+    current_turn = Column(Integer)
+    num_rounds = Column(Integer)
     max_players = Column(Integer)
 
 class Turn(Base):

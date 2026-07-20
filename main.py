@@ -9,19 +9,22 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 app = FastAPI()
-
+models.Base.metadata.drop_all(engine)
 models.Base.metadata.create_all(bind=engine)
 
 # Makes the following requests in an interpretable format for sqlalchemy and fastapi
 class JoinRequest(BaseModel):
+    player_name: str
     join_code: str
 
 class MaxPlayers(BaseModel):
+    PlayerName: str
     MaxPlayers: int
 
 class TurnRequest(BaseModel):
     turn_prompt: str
     author_name: str
+    player_index: int
     room_id : uuid.UUID
 
 # function to generate the AI response using the prompt
@@ -41,7 +44,7 @@ def get_db() :
 @app.post("/create")
 async def create_room(payload: MaxPlayers, db: Session = Depends(get_db)):
     code = create_unique_join_code(db)
-    room = models.Room(join_code=code, max_players=payload.MaxPlayers)
+    room = models.Room(join_code=code, max_players=payload.MaxPlayers, players=[payload.PlayerName])
     db.add(room)
     db.commit()
     db.refresh(room)
@@ -55,6 +58,12 @@ async def join_room(payload: JoinRequest, db: Session = Depends(get_db)):
     room = db.query(models.Room).filter(models.Room.join_code == payload.join_code.upper()).first()
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
+    if len(room.players) == room.max_players:
+        return {"error" : "room full"}
+    room.players = room.players + [payload.player_name]
+    db.add(room)
+    db.commit()
+    db.refresh(room)
     return {"room_id": room.id}
 
 # Using this as a tester function for now
@@ -80,6 +89,7 @@ async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Room not found")
     else:
         turn_db = TurnRequest(turn_prompt=turn.turn_prompt, author_name=turn.author_name, room_id = room_id)
+        
         db.add(turn_db)
         db.commit()
         db.refresh(turn_db)
