@@ -21,6 +21,7 @@ class Turn(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     room_id = Column(UUID(as_uuid=True), ForeignKey("rooms.id"))
+    player_index = Column(Integer)
     prompt = Column(String)
     author_name = Column(String)
 

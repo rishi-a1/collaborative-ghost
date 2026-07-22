@@ -74,7 +74,7 @@ async def get_rooms(db : Session = Depends(get_db), response_model=List[models.R
     return result.scalars().all()
 
 #getting the room from the room id (uuid format) in the url
-@app.get("/rooms/{room_id}")
+@app.get("/rooms/{room_id}/turns")
 async def get_room(room_id: uuid.UUID, db: Session = Depends(get_db)):
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
     if not room:
@@ -88,8 +88,7 @@ async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
     else:
-        turn_db = TurnRequest(turn_prompt=turn.turn_prompt, author_name=turn.author_name, room_id = room_id)
-        
+        turn_db = TurnRequest(turn_prompt=turn.turn_prompt, author_name=turn.author_name, room_id = room_id, player_index=turn.player_index)
         db.add(turn_db)
         db.commit()
         db.refresh(turn_db)
