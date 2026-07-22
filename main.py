@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uuid
 from typing import List, Annotated
@@ -11,6 +12,16 @@ from sqlalchemy import select
 app = FastAPI()
 models.Base.metadata.drop_all(engine)
 models.Base.metadata.create_all(bind=engine)
+
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # your React dev server
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Makes the following requests in an interpretable format for sqlalchemy and fastapi
 class JoinRequest(BaseModel):
@@ -89,6 +100,7 @@ async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Room not found")
     else:
         turn_db = TurnRequest(turn_prompt=turn.turn_prompt, author_name=turn.author_name, room_id = room_id, player_index=turn.player_index)
+        room.current_turn = (room.current_turn or 0) + 1
         db.add(turn_db)
         db.commit()
         db.refresh(turn_db)
