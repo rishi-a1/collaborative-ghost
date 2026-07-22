@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Game from "./pages/Game";
-import Lobby from "./pages/Lobby";
+import Home from "./pages/Home.tsx";
+import Game from "./pages/Game.tsx";
+import Lobby from "./pages/Lobby.tsx";
 
 function App() {
   return (
