@@ -59,5 +59,6 @@ Backups.backupdb
 MobileBackups.trash
 tmbootpicker.efi
 
-
+#frontend
+node_modules/
 
