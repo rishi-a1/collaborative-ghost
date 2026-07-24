@@ -99,7 +99,7 @@ async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
     else:
-        turn_db = models.Turn(turn_prompt=turn.turn_prompt, author_name=turn.author_name, room_id = room_id, player_index=turn.player_index)
+        turn_db = models.Turn(prompt=turn.turn_prompt, author_name=turn.author_name, room_id = room_id, player_index=turn.player_index)
         room.current_turn = (room.current_turn or 0) + 1
         db.add(turn_db)
         db.commit()
