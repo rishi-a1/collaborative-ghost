@@ -23,6 +23,7 @@ class Turn(Base):
     room_id = Column(UUID(as_uuid=True), ForeignKey("rooms.id"))
     player_index = Column(Integer)
     prompt = Column(String)
+    content = Column(String) 
     author_name = Column(String)
 
 #mirrors sqlalchemy class using pydantic to make it json
