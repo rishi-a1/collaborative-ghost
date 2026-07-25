@@ -18,8 +18,6 @@ def create_unique_join_code(db: Session):
         if not exists:
             return code
 
-client = Groq(api_key="your_free_api_key")
-
 def generate_story_turn(story_so_far: str, player_prompt: str) -> str:
     load_dotenv()
     my_api_key = os.getenv("API_KEY")
