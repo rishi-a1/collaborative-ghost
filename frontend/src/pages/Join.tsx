@@ -5,7 +5,7 @@ import { useGame } from "../Context/gamecontext";
 
 function Join() {
   const navigate = useNavigate();
-  const { setPlayerName, setJoinCode, setRoomId } = useGame();
+  const { setPlayerName, setJoinCode, setRoomId, setPlayerIndex } = useGame();
 
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -51,6 +51,7 @@ function Join() {
       setPlayerName(name.trim());
       setJoinCode(code.trim().toUpperCase());
       setRoomId(data.room_id);
+      setPlayerIndex(data.player_index);
 
       navigate(`/lobby/${data.room_id}`);
     } catch (err) {
