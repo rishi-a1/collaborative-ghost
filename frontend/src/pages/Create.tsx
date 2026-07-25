@@ -5,7 +5,7 @@ import { useGame } from "../Context/gamecontext";
 
 function Create() {
   const navigate = useNavigate();
-  const { setPlayerName, setJoinCode, setRoomId } = useGame();
+  const { setPlayerName, setJoinCode, setRoomId, setPlayerIndex } = useGame();
 
   const [name, setName] = useState("");
   const [maxPlayers, setMaxPlayers] = useState("4");
@@ -48,6 +48,7 @@ function Create() {
       setPlayerName(name.trim());
       setJoinCode(data.join_code);
       setRoomId(data.room_id);
+      setPlayerIndex(0);
 
       navigate(`/lobby/${data.room_id}`);
     } catch (err) {
