@@ -59,7 +59,7 @@ async def create_room(payload: MaxPlayers, db: Session = Depends(get_db)):
     db.add(room)
     db.commit()
     db.refresh(room)
-    return {"room_id": room.id, "join_code": room.join_code, "created_at": room.created_at}
+    return {"room_id": room.id, "join_code": room.join_code, "created_at": room.created_at, "player_index": 0}
 
 # Using post to make someone join a room
 # Using JoinRequest class for payload to make sure the payload is in JSON format
@@ -71,11 +71,12 @@ async def join_room(payload: JoinRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Room not found")
     if len(room.players) == room.max_players:
         return {"error" : "room full"}
+    player_index = len(room.players)
     room.players = room.players + [payload.player_name]
     db.add(room)
     db.commit()
     db.refresh(room)
-    return {"room_id": room.id}
+    return {"room_id": room.id, "player_index": player_index}
 
 # Using this as a tester function for now
 @app.get("/rooms")
