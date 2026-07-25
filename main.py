@@ -5,6 +5,7 @@ import uuid
 from typing import List, Annotated
 import models
 from utils import create_unique_join_code
+from utils import generate_story_turn
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -12,7 +13,6 @@ from sqlalchemy import select
 app = FastAPI()
 models.Base.metadata.drop_all(engine)
 models.Base.metadata.create_all(bind=engine)
-
 
 app = FastAPI()
 
@@ -96,16 +96,22 @@ async def get_room(room_id: uuid.UUID, db: Session = Depends(get_db)):
 # function to add a turn once in a room
 @app.post("/rooms/{room_id}")
 async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(get_db)):
-    room = db.query(models.Room).filter(models.Room.id == room_id).first()
-    if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
-    else:
-        turn_db = models.Turn(prompt=turn.turn_prompt, author_name=turn.author_name, room_id = room_id, player_index=turn.player_index)
-        room.current_turn = (room.current_turn or 0) + 1
-        db.add(turn_db)
-        db.commit()
-        db.refresh(turn_db)
-        return {"id": turn_db.id, "created_at": turn_db.created_at, "room_id": turn_db.room_id, "prompt": turn_db.turn_prompt, "author_name": turn_db.author_name}
+    prior_turns = db.query(models.Turn).filter(models.Turn.room_id == room_id).order_by(models.Turn.created_at).all()
+    story_so_far = "\n".join(t.content for t in prior_turns)
+
+    ai_content = generate_story_turn(story_so_far, turn.turn_prompt)
+
+    turn_db = models.Turn(
+        room_id=room_id,
+        author_name=turn.author_name,
+        player_index=turn.player_index,
+        prompt=turn.turn_prompt,
+        content=ai_content,
+    )
+    db.add(turn_db)
+    db.commit()
+    db.refresh(turn_db)
+    return {"id": turn_db.id, "created_at": turn_db.created_at, "room_id": turn_db.room_id, "prompt": turn_db.prompt, "content": turn_db.content, "author_name": turn_db.author_name}
 
 # function to get all turns in the room
 @app.get("/rooms/{room_id}")
