@@ -13,7 +13,7 @@ type Turn = {
 
 function Game() {
   const { roomId } = useParams<{ roomId: string }>();
-  const { playerName } = useGame();
+  const { playerName, playerIndex } = useGame();
 
   const [turns, setTurns] = useState<Turn[]>([]);
   const [prompt, setPrompt] = useState("");
@@ -63,7 +63,7 @@ function Game() {
         body: JSON.stringify({
           turn_prompt: prompt.trim(),
           author_name: playerName,
-          player_index: 0,
+          player_index: playerIndex ?? 0,
           room_id: roomId,
         }),
       });
