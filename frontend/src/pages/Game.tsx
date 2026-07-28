@@ -8,6 +8,7 @@ type Turn = {
   created_at: string;
   room_id: string;
   prompt: string;
+  content: string;
   author_name: string;
 };
 
@@ -97,7 +98,7 @@ function Game() {
               key={turn.id}
               style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "1rem" }}
             >
-              <p style={{ marginBottom: "0.5rem" }}>{turn.prompt}</p>
+              <p style={{ marginBottom: "0.5rem" }}>{turn.content}</p>
               <p style={{ fontSize: "0.85rem", color: "var(--text)" }}>— {turn.author_name}</p>
             </div>
           ))}
