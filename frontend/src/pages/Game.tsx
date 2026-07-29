@@ -3,6 +3,8 @@ import type { FormEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGame } from "../Context/gamecontext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 type Turn = {
   id: string;
   created_at: string;
@@ -26,7 +28,7 @@ function Game() {
   async function loadTurns() {
     if (!roomId) return;
     try {
-      const res = await fetch(`http://localhost:8000/rooms/${roomId}`);
+      const res = await fetch(`${API_URL}/rooms/${roomId}`);
       if (!res.ok) {
         setError("Couldn't load this room.");
         return;
@@ -52,7 +54,7 @@ function Game() {
           [JSON.stringify({ player_name: playerName })],
           { type: "application/json" }
         );
-        navigator.sendBeacon(`http://localhost:8000/rooms/${roomId}/leave`, blob);
+        navigator.sendBeacon(`${API_URL}/rooms/${roomId}/leave`, blob);
       }
     }
     window.addEventListener("beforeunload", handleUnload);
@@ -62,7 +64,7 @@ function Game() {
   async function handleLeaveClick() {
     if (roomId && playerName) {
       try {
-        await fetch(`http://localhost:8000/rooms/${roomId}/leave`, {
+        await fetch(`${API_URL}/rooms/${roomId}/leave`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ player_name: playerName }),
@@ -89,7 +91,7 @@ function Game() {
 
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/rooms/${roomId}`, {
+      const res = await fetch(`${API_URL}/rooms/${roomId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
