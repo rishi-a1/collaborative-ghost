@@ -1,11 +1,13 @@
-import { useState } from "react"; 
+import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "../Context/gamecontext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function Join() {
   const navigate = useNavigate();
-  const { setPlayerName, setJoinCode, setRoomId, setPlayerIndex } = useGame();
+  const { setPlayerName, setJoinCode, setRoomId } = useGame();
 
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -23,7 +25,7 @@ function Join() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/join", {
+      const res = await fetch(`${API_URL}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -51,7 +53,6 @@ function Join() {
       setPlayerName(name.trim());
       setJoinCode(code.trim().toUpperCase());
       setRoomId(data.room_id);
-      setPlayerIndex(data.player_index);
 
       navigate(`/lobby/${data.room_id}`);
     } catch (err) {
