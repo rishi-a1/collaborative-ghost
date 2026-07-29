@@ -3,9 +3,11 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "../Context/gamecontext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function Create() {
   const navigate = useNavigate();
-  const { setPlayerName, setJoinCode, setRoomId, setPlayerIndex } = useGame();
+  const { setPlayerName, setJoinCode, setRoomId } = useGame();
 
   const [name, setName] = useState("");
   const [maxPlayers, setMaxPlayers] = useState("4");
@@ -29,7 +31,7 @@ function Create() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/create", {
+      const res = await fetch(`${API_URL}/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -48,7 +50,6 @@ function Create() {
       setPlayerName(name.trim());
       setJoinCode(data.join_code);
       setRoomId(data.room_id);
-      setPlayerIndex(0);
 
       navigate(`/lobby/${data.room_id}`);
     } catch (err) {
