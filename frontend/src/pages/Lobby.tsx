@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useGame } from "../Context/gamecontext";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function Lobby() {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
@@ -10,7 +12,7 @@ function Lobby() {
   async function leaveRoom() {
     if (roomId && playerName) {
       try {
-        await fetch(`http://localhost:8000/rooms/${roomId}/leave`, {
+        await fetch(`${API_URL}/rooms/${roomId}/leave`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ player_name: playerName }),
@@ -29,7 +31,7 @@ function Lobby() {
           [JSON.stringify({ player_name: playerName })],
           { type: "application/json" }
         );
-        navigator.sendBeacon(`http://localhost:8000/rooms/${roomId}/leave`, blob);
+        navigator.sendBeacon(`${API_URL}/rooms/${roomId}/leave`, blob);
       }
     }
     window.addEventListener("beforeunload", handleUnload);
