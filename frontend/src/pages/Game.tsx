@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useGame } from "../Context/gamecontext";
 
 type Turn = {
@@ -14,6 +14,7 @@ type Turn = {
 
 function Game() {
   const { roomId } = useParams<{ roomId: string }>();
+  const navigate = useNavigate();
   const { playerName, playerIndex } = useGame();
 
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -42,6 +43,36 @@ function Game() {
   useEffect(() => {
     loadTurns();
   }, [roomId]);
+
+  // best-effort cleanup if the tab is closed or refreshed mid-game
+  useEffect(() => {
+    function handleUnload() {
+      if (roomId && playerName) {
+        const blob = new Blob(
+          [JSON.stringify({ player_name: playerName })],
+          { type: "application/json" }
+        );
+        navigator.sendBeacon(`http://localhost:8000/rooms/${roomId}/leave`, blob);
+      }
+    }
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [roomId, playerName]);
+
+  async function handleLeaveClick() {
+    if (roomId && playerName) {
+      try {
+        await fetch(`http://localhost:8000/rooms/${roomId}/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ player_name: playerName }),
+        });
+      } catch (err) {
+        // best effort — still navigate away even if the request fails
+      }
+    }
+    navigate("/");
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -85,7 +116,10 @@ function Game() {
 
   return (
     <div className="home-container">
-      <h1>The Story So Far</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: "560px", margin: "0 auto" }}>
+        <h1>The Story So Far</h1>
+        <button className="btn" onClick={handleLeaveClick}>Leave Room</button>
+      </div>
 
       {fetching ? (
         <p>Loading...</p>
