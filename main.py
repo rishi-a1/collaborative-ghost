@@ -16,7 +16,7 @@ app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-FRONTEND_URL = os.getenv("")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[FRONTEND_URL],  # React dev server
