@@ -9,16 +9,17 @@ from utils import generate_story_turn
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+import os
+from dotenv import load_dotenv
 
 app = FastAPI()
-models.Base.metadata.drop_all(engine)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
+FRONTEND_URL = os.getenv("")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # your React dev server
+    allow_origins=[FRONTEND_URL],  # React dev server
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -38,10 +39,9 @@ class TurnRequest(BaseModel):
     player_index: int
     room_id : uuid.UUID
 
-# function to generate the AI response using the prompt
-def get_ai_response(prompt):
-    a = "ai resp"
-    return str(a)
+
+class LeaveRequest(BaseModel):
+    player_name: str
 
 # Starts a db session for an sql request
 def get_db() :
@@ -123,3 +123,22 @@ async def get_turns(room_id: uuid.UUID, db: Session = Depends(get_db), response_
         turn = db.query(models.Turn).filter(models.Turn.room_id == room_id)
         result = db.execute(turn)
         return result.scalars().all()
+
+# function to remove a player from a room, deleting the room + its turns if it's now empty
+@app.post("/rooms/{room_id}/leave")
+async def leave_room(room_id: uuid.UUID, payload: LeaveRequest, db: Session = Depends(get_db)):
+    room = db.query(models.Room).filter(models.Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    room.players = [p for p in room.players if p != payload.player_name]
+
+    if len(room.players) == 0:
+        db.query(models.Turn).filter(models.Turn.room_id == room_id).delete()
+        db.delete(room)
+        db.commit()
+        return {"deleted": True}
+
+    db.add(room)
+    db.commit()
+    return {"deleted": False, "players": room.players}
