@@ -151,6 +151,10 @@ async def leave_room(room_id: uuid.UUID, payload: LeaveRequest, db: Session = De
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
 
+    if payload.player_name not in room.players:
+        return {"deleted": False, "players": room.players, "current_turn": room.current_turn}
+
+    leaving_index = room.players.index(payload.player_name)
     room.players = [p for p in room.players if p != payload.player_name]
 
     if len(room.players) == 0:
@@ -159,8 +163,10 @@ async def leave_room(room_id: uuid.UUID, payload: LeaveRequest, db: Session = De
         db.commit()
         return {"deleted": True}
 
+    if leaving_index < room.current_turn:
+        room.current_turn -= 1
     room.current_turn = room.current_turn % len(room.players)
 
     db.add(room)
     db.commit()
-    return {"deleted": False, "players": room.players}
+    return {"deleted": False, "players": room.players, "current_turn": room.current_turn}
