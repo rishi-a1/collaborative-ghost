@@ -10,7 +10,7 @@ function Create() {
   const { setPlayerName, setJoinCode, setRoomId } = useGame();
 
   const [name, setName] = useState("");
-  const [maxPlayers, setMaxPlayers] = useState("4");
+  const [maxPlayers, setMaxPlayers] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -64,21 +64,29 @@ function Create() {
       <h1>Create a Room</h1>
       <form onSubmit={handleSubmit}>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "320px", margin: "0 auto" }}>
-          <input
-            type="text"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={30}
-          />
-          <input
-            type="number"
-            placeholder="Max players"
-            value={maxPlayers}
-            onChange={(e) => setMaxPlayers(e.target.value)}
-            min={2}
-            max={20}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", textAlign: "left" }}>
+            <label htmlFor="playerName">Your name</label>
+            <input
+              id="playerName"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={30}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", textAlign: "left" }}>
+            <label htmlFor="maxPlayers">Max players</label>
+            <input
+              id="maxPlayers"
+              type="number"
+              placeholder="e.g. 4"
+              value={maxPlayers}
+              onChange={(e) => setMaxPlayers(e.target.value)}
+              min={2}
+              max={20}
+            />
+          </div>
           {error && <p style={{ color: "#e11d48" }}>{error}</p>}
           <div className="button-group">
             <button type="submit" className="btn btn-primary" disabled={loading}>
