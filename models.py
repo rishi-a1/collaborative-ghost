@@ -12,7 +12,7 @@ class Room(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     join_code = Column(String, unique=True, index = True)
     players = Column(JSON, default=list)
-    current_turn = Column(Integer)
+    current_turn = Column(Integer, default=0)
     num_rounds = Column(Integer)
     max_players = Column(Integer)
 
