@@ -24,7 +24,7 @@ type RoomState = {
 function Game() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const { playerName, playerIndex, joinCode } = useGame();
+  const { playerName, playerIndex, joinCode, setPlayerIndex } = useGame();
 
   const [turns, setTurns] = useState<Turn[]>([]);
   const [currentTurn, setCurrentTurn] = useState<number>(0);
@@ -49,6 +49,11 @@ function Game() {
       setTurns(data.turns);
       setCurrentTurn(data.current_turn);
       setPlayers(data.players);
+
+      const liveIndex = data.players.indexOf(playerName);
+      if (liveIndex !== -1 && liveIndex !== playerIndex) {
+        setPlayerIndex(liveIndex);
+      }
     } catch (err) {
       setError("Couldn't reach the server. Is the backend running?");
     } finally {
@@ -163,9 +168,28 @@ function Game() {
       </div>
 
       {!fetching && players.length > 0 && (
-        <p style={{ maxWidth: "560px", margin: "1rem auto 0" }}>
-          {isMyTurn ? "It's your turn!" : currentPlayerName ? `Waiting on ${currentPlayerName}'s turn...` : ""}
-        </p>
+        <>
+          <p style={{ maxWidth: "560px", margin: "1rem auto 0" }}>
+            {isMyTurn ? "It's your turn!" : currentPlayerName ? `Waiting on ${currentPlayerName}'s turn...` : ""}
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", maxWidth: "560px", margin: "0.75rem auto 0" }}>
+            {players.map((p, i) => (
+              <span
+                key={`${p}-${i}`}
+                style={{
+                  padding: "0.35rem 0.75rem",
+                  borderRadius: "999px",
+                  border: `1px solid ${i === currentTurn ? "var(--accent-border)" : "var(--border)"}`,
+                  background: i === currentTurn ? "var(--accent-bg)" : "transparent",
+                  fontWeight: i === currentTurn ? 600 : 400,
+                  fontSize: "0.9rem",
+                }}
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+        </>
       )}
 
       {fetching ? (
