@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 app.add_middleware(
     CORSMiddleware,
@@ -55,7 +54,7 @@ def get_db() :
 @app.post("/create")
 async def create_room(payload: MaxPlayers, db: Session = Depends(get_db)):
     code = create_unique_join_code(db)
-    room = models.Room(join_code=code, max_players=payload.MaxPlayers, players=[payload.PlayerName])
+    room = models.Room(join_code=code, max_players=payload.MaxPlayers, players=[payload.PlayerName], current_turn=0)
     db.add(room)
     db.commit()
     db.refresh(room)
@@ -96,6 +95,16 @@ async def get_room(room_id: uuid.UUID, db: Session = Depends(get_db)):
 # function to add a turn once in a room
 @app.post("/rooms/{room_id}")
 async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(get_db)):
+    room = db.query(models.Room).filter(models.Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    if not room.players:
+        raise HTTPException(status_code=400, detail="Room has no players")
+
+    if room.current_turn != turn.player_index:
+        raise HTTPException(status_code=403, detail="It's not your turn")
+
     prior_turns = db.query(models.Turn).filter(models.Turn.room_id == room_id).order_by(models.Turn.created_at).all()
     story_so_far = "\n".join(t.content for t in prior_turns)
 
@@ -109,20 +118,31 @@ async def add_turn(room_id: uuid.UUID, turn: TurnRequest, db: Session = Depends(
         content=ai_content,
     )
     db.add(turn_db)
+
+    room.current_turn = (room.current_turn + 1) % len(room.players)
+    db.add(room)
+
     db.commit()
     db.refresh(turn_db)
     return {"id": turn_db.id, "created_at": turn_db.created_at, "room_id": turn_db.room_id, "prompt": turn_db.prompt, "content": turn_db.content, "author_name": turn_db.author_name}
 
-# function to get all turns in the room
+# function to get all turns in the room, plus whose turn it currently is
 @app.get("/rooms/{room_id}")
-async def get_turns(room_id: uuid.UUID, db: Session = Depends(get_db), response_model=List[models.RoomOut]):
+async def get_turns(room_id: uuid.UUID, db: Session = Depends(get_db)):
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    else:
-        turn = db.query(models.Turn).filter(models.Turn.room_id == room_id)
-        result = db.execute(turn)
-        return result.scalars().all()
+
+    turn_query = db.query(models.Turn).filter(models.Turn.room_id == room_id).order_by(models.Turn.created_at)
+    result = db.execute(turn_query)
+    turns = result.scalars().all()
+
+    return {
+        "turns": turns,
+        "current_turn": room.current_turn,
+        "players": room.players,
+        "max_players": room.max_players,
+    }
 
 # function to remove a player from a room, deleting the room + its turns if it's now empty
 @app.post("/rooms/{room_id}/leave")
@@ -138,6 +158,8 @@ async def leave_room(room_id: uuid.UUID, payload: LeaveRequest, db: Session = De
         db.delete(room)
         db.commit()
         return {"deleted": True}
+
+    room.current_turn = room.current_turn % len(room.players)
 
     db.add(room)
     db.commit()
