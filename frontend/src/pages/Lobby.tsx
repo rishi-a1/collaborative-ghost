@@ -27,9 +27,13 @@ function Lobby() {
   useEffect(() => {
     function handleUnload() {
       if (roomId && playerName) {
+        // text/plain (not application/json) keeps this a "simple" CORS request
+        // that doesn't need a preflight — preflighted requests often get
+        // dropped when the tab is already closing. FastAPI parses the body
+        // as JSON regardless of the Content-Type header.
         const blob = new Blob(
           [JSON.stringify({ player_name: playerName })],
-          { type: "application/json" }
+          { type: "text/plain" }
         );
         navigator.sendBeacon(`${API_URL}/rooms/${roomId}/leave`, blob);
       }
