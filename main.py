@@ -50,6 +50,10 @@ def get_db() :
     finally:
         db.close()
 
+@app.get("/health", status_code=status.HTTP_200_OK)
+async def health_check():
+    return {"status": "ok"}
+
 # Function used to create a room and add it to the db
 @app.post("/create")
 async def create_room(payload: MaxPlayers, db: Session = Depends(get_db)):
